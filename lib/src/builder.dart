@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:markdown/markdown.dart' as md;
 
+import '../flutter_markdown.dart';
 import '_functions_io.dart' if (dart.library.html) '_functions_web.dart';
 import 'style_sheet.dart';
 import 'widget.dart';
@@ -32,7 +33,10 @@ const List<String> _kBlockTags = const <String>[
 
 const List<String> _kListTags = const <String>['ul', 'ol'];
 
-bool _isBlockTag(String tag) => _kBlockTags.contains(tag);
+bool _isBlockTag(String tag, Map<String, MarkdownElementBuilder> builders) {
+  return _kBlockTags.contains(tag) || builders.keys.contains(tag);
+}
+    
 
 bool _isListTag(String tag) => _kListTags.contains(tag);
 
@@ -99,7 +103,8 @@ class MarkdownBuilder implements md.NodeVisitor {
     @required this.imageDirectory,
     @required this.imageBuilder,
     @required this.checkboxBuilder,
-    @required this.builders,
+    @required this.inlineBuilders,
+    @required this.blockBuilders,
     @required this.listItemCrossAxisAlignment,
     this.fitContent = false,
   });
@@ -125,7 +130,9 @@ class MarkdownBuilder implements md.NodeVisitor {
   final MarkdownCheckboxBuilder checkboxBuilder;
 
   /// Call when build a custom widget.
-  final Map<String, MarkdownElementBuilder> builders;
+  final Map<String, MarkdownElementBuilder> inlineBuilders;
+
+  final Map<String, MarkdownElementBuilder> blockBuilders;
 
   /// Whether to allow the widget to fit the child content.
   final bool fitContent;
@@ -180,12 +187,16 @@ class MarkdownBuilder implements md.NodeVisitor {
     final String tag = element.tag;
     if (_currentBlockTag == null) _currentBlockTag = tag;
 
-    if (builders.containsKey(tag)) {
-      builders[tag].visitElementBefore(element);
+    if (inlineBuilders.containsKey(tag)) {
+      inlineBuilders[tag].visitElementBefore(element);
+    }
+
+    if (blockBuilders.containsKey(tag)) {
+      blockBuilders[tag].visitElementBefore(element);
     }
 
     var start;
-    if (_isBlockTag(tag)) {
+    if (_isBlockTag(tag, blockBuilders)) {
       _addAnonymousBlockIfNeeded();
       if (_isListTag(tag)) {
         _listIndents.add(tag);
@@ -261,6 +272,10 @@ class MarkdownBuilder implements md.NodeVisitor {
     _addParentInlineIfNeeded(_blocks.last.tag);
 
     Widget child;
+    final builders = Map<String, MarkdownElementBuilder>();
+    builders.addAll(blockBuilders);
+    builders.addAll(inlineBuilders);
+    
     if (_blocks.isNotEmpty && builders.containsKey(_blocks.last.tag)) {
       child = builders[_blocks.last.tag]
           .visitText(text, styleSheet.styles[_blocks.last.tag]);
@@ -293,7 +308,7 @@ class MarkdownBuilder implements md.NodeVisitor {
   void visitElementAfter(md.Element element) {
     final String tag = element.tag;
 
-    if (_isBlockTag(tag)) {
+    if (_isBlockTag(tag, blockBuilders)) {
       _addAnonymousBlockIfNeeded();
 
       final _BlockElement current = _blocks.removeLast();
@@ -369,6 +384,11 @@ class MarkdownBuilder implements md.NodeVisitor {
         );
       } else if (tag == 'hr') {
         child = Container(decoration: styleSheet.horizontalRuleDecoration);
+      } else {
+        if (!_kBlockTags.contains(tag) && blockBuilders.containsKey(tag)) {
+          child =
+              blockBuilders[tag].visitElementAfter(element, styleSheet.styles[tag]);
+        }
       }
 
       _addBlockChild(child);
@@ -376,9 +396,9 @@ class MarkdownBuilder implements md.NodeVisitor {
       final _InlineElement current = _inlines.removeLast();
       final _InlineElement parent = _inlines.last;
 
-      if (builders.containsKey(tag)) {
+      if (inlineBuilders.containsKey(tag)) {
         final Widget child =
-            builders[tag].visitElementAfter(element, styleSheet.styles[tag]);
+            inlineBuilders[tag].visitElementAfter(element, styleSheet.styles[tag]);
         if (child != null) current.children[0] = child;
       } else if (tag == 'img') {
         // create an image widget for this image
@@ -529,7 +549,7 @@ class MarkdownBuilder implements md.NodeVisitor {
 
     WrapAlignment blockAlignment = WrapAlignment.start;
     TextAlign textAlign = TextAlign.start;
-    if (_isBlockTag(_currentBlockTag)) {
+    if (_isBlockTag(_currentBlockTag, blockBuilders)) {
       blockAlignment = _wrapAlignmentForBlockTag(_currentBlockTag);
       textAlign = _textAlignForBlockTag(_currentBlockTag);
     }

@@ -111,7 +111,7 @@ class SubscriptSyntaxDemo extends StatelessWidget
         if (snapshot.connectionState == ConnectionState.done) {
           return Markdown(
             data: snapshot.data,
-            builders: {
+            inlineBuilders: {
               'sub': SubscriptBuilder(),
             },
             extensionSet: md.ExtensionSet([], [SubscriptSyntax()]),

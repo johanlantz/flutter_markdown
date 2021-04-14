@@ -8,7 +8,7 @@ import 'package:markdown/markdown.dart' as md;
 import '../shared/markdown_demo_widget.dart';
 
 const String _data = """
-## Centered Title
+## Centered _Title_
 
 ###### ※ ※ ※
 
@@ -47,7 +47,7 @@ class CenteredHeaderDemo extends StatelessWidget implements MarkdownDemoWidget {
         if (snapshot.connectionState == ConnectionState.done) {
           return Markdown(
             data: snapshot.data,
-            builders: {
+            blockBuilders: {
               'h2': CenteredHeaderBuilder(),
               'h6': CenteredHeaderBuilder(),
             },

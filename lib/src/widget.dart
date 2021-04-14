@@ -135,13 +135,14 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.extensionSet,
     this.imageBuilder,
     this.checkboxBuilder,
-    this.builders = const {},
+    this.inlineBuilders = const {},
+    this.blockBuilders = const {},
     this.fitContent = false,
     this.listItemCrossAxisAlignment =
         MarkdownListItemCrossAxisAlignment.baseline,
   })  : assert(data != null),
         assert(selectable != null),
-        assert(builders != null),
+        assert(inlineBuilders != null),
         assert(listItemCrossAxisAlignment != null),
         super(key: key);
 
@@ -202,7 +203,9 @@ abstract class MarkdownWidget extends StatefulWidget {
   /// ```
   ///
   /// The `SubscriptBuilder` is a subclass of [MarkdownElementBuilder].
-  final Map<String, MarkdownElementBuilder> builders;
+  final Map<String, MarkdownElementBuilder> inlineBuilders;
+
+  final Map<String, MarkdownElementBuilder> blockBuilders;
 
   /// Whether to allow the widget to fit the child content.
   final bool fitContent;
@@ -277,7 +280,8 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
       imageDirectory: widget.imageDirectory,
       imageBuilder: widget.imageBuilder,
       checkboxBuilder: widget.checkboxBuilder,
-      builders: widget.builders,
+      inlineBuilders: widget.inlineBuilders,
+      blockBuilders: widget.blockBuilders,
       fitContent: widget.fitContent,
       listItemCrossAxisAlignment: widget.listItemCrossAxisAlignment,
     );
@@ -343,7 +347,8 @@ class MarkdownBody extends MarkdownWidget {
     md.ExtensionSet extensionSet,
     MarkdownImageBuilder imageBuilder,
     MarkdownCheckboxBuilder checkboxBuilder,
-    Map<String, MarkdownElementBuilder> builders = const {},
+    Map<String, MarkdownElementBuilder> inlineBuilders = const {},
+    Map<String, MarkdownElementBuilder> blockBuilders = const {},
     MarkdownListItemCrossAxisAlignment listItemCrossAxisAlignment =
         MarkdownListItemCrossAxisAlignment.baseline,
     this.shrinkWrap = true,
@@ -362,7 +367,8 @@ class MarkdownBody extends MarkdownWidget {
           extensionSet: extensionSet,
           imageBuilder: imageBuilder,
           checkboxBuilder: checkboxBuilder,
-          builders: builders,
+          inlineBuilders: inlineBuilders,
+          blockBuilders: blockBuilders,
           listItemCrossAxisAlignment: listItemCrossAxisAlignment,
         );
 
@@ -409,7 +415,8 @@ class Markdown extends MarkdownWidget {
     md.ExtensionSet extensionSet,
     MarkdownImageBuilder imageBuilder,
     MarkdownCheckboxBuilder checkboxBuilder,
-    Map<String, MarkdownElementBuilder> builders = const {},
+    Map<String, MarkdownElementBuilder> inlineBuilders = const {},
+    Map<String, MarkdownElementBuilder> blockBuilders = const {},
     MarkdownListItemCrossAxisAlignment listItemCrossAxisAlignment =
         MarkdownListItemCrossAxisAlignment.baseline,
     this.padding = const EdgeInsets.all(16.0),
@@ -430,7 +437,8 @@ class Markdown extends MarkdownWidget {
           extensionSet: extensionSet,
           imageBuilder: imageBuilder,
           checkboxBuilder: checkboxBuilder,
-          builders: builders,
+          inlineBuilders: inlineBuilders,
+          blockBuilders: blockBuilders,
           listItemCrossAxisAlignment: listItemCrossAxisAlignment,
         );
 
